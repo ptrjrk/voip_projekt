@@ -60,6 +60,4 @@ context support-ael {
         Hangup();
 
     };
-
-    // Hangup handler
 };
