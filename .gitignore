@@ -1,0 +1,22 @@
+# Credentials
+.env
+*.key
+*.pem
+
+# Evidence
+evidence/*
+!evidence/.gitkeep
+
+# Logs
+*.log
+
+# Network captures
+*.pcap
+*.pcapng
+
+# Temporary files
+*.tmp
+*.bak
+
+# macOS
+.DS_Store
