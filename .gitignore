@@ -1,7 +1,10 @@
 # Credentials
 .env
+.env.*
+!.env.example
 *.key
 *.pem
+*.secret
 
 # Evidence
 evidence/*
@@ -9,14 +12,46 @@ evidence/*
 
 # Logs
 *.log
+logs/
 
 # Network captures
 *.pcap
 *.pcapng
+*.cap
 
 # Temporary files
 *.tmp
 *.bak
+*.swp
+*~
+
+# Build and compilation
+build/
+dist/
+*.o
+*.a
+*.so
+*.so.*
+
+# Downloaded sources
+sources/
+downloads/
+asterisk-*/
+asterisk-*.tar.gz
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# IDE and editors
+.vscode/
+.idea/
 
 # macOS
 .DS_Store
+._*
+
+# Windows
+Thumbs.db
+Desktop.ini
