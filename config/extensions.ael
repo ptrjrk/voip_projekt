@@ -1,1 +1,69 @@
+context support-ael {
 
+    2002 => {
+
+        NoOp([AEL] Incoming call from ${CALLERID(num)});
+        Answer();
+
+        // Check demonstration mode
+        DEMO_MODE = ${DB(voip/mode)};
+
+        if ("${DEMO_MODE}" = "open") {
+            BUSINESS_OPEN = 1;
+        }
+        else if ("${DEMO_MODE}" = "closed") {
+            BUSINESS_OPEN = 0;
+        }
+        else {
+            // Check real business hours
+            ifTime (08:00-15:59,mon-fri,*,*) {
+                BUSINESS_OPEN = 1;
+            }
+            else {
+                BUSINESS_OPEN = 0;
+            }
+        }
+
+        // Business hours - OPEN
+        if (${BUSINESS_OPEN} = 1) {
+
+            NoOp([AEL] Business hours: OPEN);
+            NoOp([AEL] Routing to queue);
+
+            Queue(${SUPPORT_QUEUE},,,,${QUEUE_TIMEOUT});
+
+            NoOp([AEL] Queue status: ${QUEUESTATUS});
+
+            // End successfully connected call
+            if ("${ABANDONED}" = "FALSE") {
+                NoOp([AEL] Call finished);
+                Hangup();
+            }
+
+        }
+        else {
+
+            // Business hours - CLOSED
+            NoOp([AEL] Business hours: CLOSED);
+
+        }
+
+        // Voicemail fallback
+        NoOp([AEL] Routing to voicemail);
+
+        VoiceMail(${SUPPORT_MAILBOX},u);
+
+        NoOp([AEL] Voicemail status: ${VMSTATUS});
+
+        // End call
+        NoOp([AEL] Call finished);
+        Hangup();
+
+    };
+
+    // Hangup handler
+    h => {
+        NoOp([AEL] Channel disconnected);
+    };
+
+};
