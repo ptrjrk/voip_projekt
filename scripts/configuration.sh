@@ -141,7 +141,7 @@ dateformat=%F %T
 [logfiles]
 console => notice,warning,error,verbose
 messages => notice,warning,error
-full => notice,warning,error,debug,verbose
+full => notice,warning,error,verbose(5)
 EOF
 
 # Nastavení oprávnění
