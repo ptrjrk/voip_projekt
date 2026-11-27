@@ -177,16 +177,22 @@ if ! systemctl start asterisk; then
     exit 1
 fi
 
-# Čekání na dostupnost Asterisk CLI
+# Čekání na úplnou inicializaci ústředny
 echo "[INFO] Čekám na inicializaci ústředny..."
 
 READY=0
 
-for ((i=1; i<=30; i++)); do
+for ((i=1; i<=60; i++)); do
 
-    if asterisk -rx "core show uptime" >/dev/null 2>&1; then
+    if systemctl is-active --quiet asterisk &&
+       timeout 3 asterisk -rx "core waitfullybooted" \
+           >/dev/null 2>&1 &&
+       asterisk -rx "core show version" 2>/dev/null |
+           grep -q "^Asterisk "; then
+
         READY=1
         break
+
     fi
 
     sleep 1
@@ -194,10 +200,13 @@ for ((i=1; i<=30; i++)); do
 done
 
 if [[ "$READY" -ne 1 ]]; then
-    echo "[ERROR] Asterisk CLI není dostupné."
+    echo "[ERROR] Inicializace Asterisku selhala."
     journalctl -u asterisk -n 50 --no-pager
+    systemctl stop asterisk
     exit 1
 fi
+
+echo "[OK] Asterisk byl plně inicializován."
 
 # Nastavení výchozího provozního režimu
 asterisk -rx "database put voip mode auto"
