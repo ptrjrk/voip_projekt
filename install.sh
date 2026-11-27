@@ -1,50 +1,22 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -Eeuo pipefail
+set -euo pipefail
 
-# Kontrola oprávnění
-if [[ $EUID -ne 0 ]]; then
-    echo "Spusť instalační skript jako root nebo pomocí sudo."
-    exit 1
-fi
+cd "$(dirname "$0")"
 
-# Adresáře projektu
-export PROJECT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-export SCRIPTS_DIR="$PROJECT_DIR/scripts"
-export CONFIG_DIR="$PROJECT_DIR/config"
-export EVIDENCE_DIR="$PROJECT_DIR/evidence"
+echo "[1/5] Příprava systému..."
+bash scripts/system.sh
 
-mkdir -p "$EVIDENCE_DIR"
+echo "[2/5] Instalace závislostí..."
+bash scripts/dependencies.sh
 
-# Instalační fáze
-STAGES=(
-    "system.sh"
-    "dependencies.sh"
-    "asterisk.sh"
-    "configuration.sh"
-    "verification.sh"
-    "capture.sh"
-)
+echo "[3/5] Instalace Asterisku..."
+bash scripts/asterisk.sh
 
-echo "========================================"
-echo "       VoIP Projekt - instalace"
-echo "========================================"
+echo "[4/5] Konfigurace Asterisku..."
+bash scripts/configuration.sh
 
-for STAGE in "${STAGES[@]}"; do
-    echo ""
-    echo "[INFO] Spouštím $STAGE"
+echo "[5/5] Ověření funkčnosti..."
+bash scripts/verification.sh
 
-    if [[ ! -f "$SCRIPTS_DIR/$STAGE" ]]; then
-        echo "[ERROR] Skript $STAGE neexistuje."
-        exit 1
-    fi
-
-    bash "$SCRIPTS_DIR/$STAGE"
-
-    echo "[OK] $STAGE dokončen."
-done
-
-echo ""
-echo "========================================"
-echo "       Všechny skripty dokončeny"
-echo "========================================"
+echo "[OK] Projekt je připraven k použití."
