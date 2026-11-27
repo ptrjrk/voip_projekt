@@ -9,7 +9,7 @@ SCENARIO="${1:-}"
 IMPLEMENTATION="${2:-}"
 
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
-EVIDENCE_ROOT="${EVIDENCE_ROOT:-$PROJECT_DIR/evidence}"
+EVIDENCE_ROOT="${EVIDENCE_ROOT:-/data/voip_evidence}"
 
 CAPTURE_PID=""
 LOG_PID=""
@@ -55,6 +55,15 @@ for tool in tcpdump tshark asterisk; do
         exit 1
     fi
 done
+
+# Kontrola perzistentního úložiště
+
+if [[ "$EVIDENCE_ROOT" == /data || "$EVIDENCE_ROOT" == /data/* ]]; then
+    if ! mountpoint -q /data; then
+        echo "[ERROR] Perzistentní disk /data není připojen."
+        exit 1
+    fi
+fi
 
 # Příprava adresářů
 
@@ -132,7 +141,7 @@ echo "[INFO] Výstup: $OUTPUT_DIR"
     echo "Kernel: $(uname -r)"
     echo "Asterisk: $(asterisk -V)"
     echo "Timezone: $(timedatectl show -p Timezone --value)"
-    echo "Git commit: $(git -C "$PROJECT_DIR" rev-parse HEAD 2>/dev/null || echo unknown)"
+    echo "Git commit: $(git -c safe.directory="$PROJECT_DIR" -C "$PROJECT_DIR" rev-parse HEAD 2>/dev/null || echo unknown)"
 } > "$OUTPUT_DIR/system/environment.txt"
 
 # Informace o dialplanech
@@ -151,6 +160,19 @@ asterisk -rx "dialplan show support-lua" \
 
 asterisk -rx "module show" \
     > "$OUTPUT_DIR/system/modules.txt"
+
+# Kontrolní součty nasazené konfigurace
+
+sha256sum \
+    /etc/asterisk/extensions.conf \
+    /etc/asterisk/extensions.ael \
+    /etc/asterisk/extensions.lua \
+    /etc/asterisk/pjsip.conf \
+    /etc/asterisk/queues.conf \
+    /etc/asterisk/voicemail.conf \
+    /etc/asterisk/rtp.conf \
+    /etc/asterisk/modules.conf \
+    > "$OUTPUT_DIR/system/config_sha256.txt"
 
 # Stav před testem
 
