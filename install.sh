@@ -2,7 +2,11 @@
 
 set -euo pipefail
 
-cd "$(dirname "$0")"
+export PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+cd "$PROJECT_DIR"
+
+echo "[INFO] Adresář projektu: $PROJECT_DIR"
 
 echo "[1/5] Příprava systému..."
 bash scripts/system.sh
