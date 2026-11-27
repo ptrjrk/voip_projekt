@@ -88,11 +88,6 @@ extensions = {
         ["2003"] = function(context, extension)
             customer_support()
         end;
-
-        ["h"] = function(context, extension)
-            app.NoOp("[LUA] Channel disconnected")
-        end;
-
     };
 
 }
