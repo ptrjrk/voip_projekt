@@ -4,15 +4,8 @@ set -Eeuo pipefail
 
 PROJECT_DIR="${PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
-# Kontrola oprávnění
 if [[ "$EUID" -ne 0 ]]; then
-    echo "[ERROR] Skript vyžaduje oprávnění root."
-    exit 1
-fi
-
-# Načtení systémových informací
-if [[ ! -f "$PROJECT_DIR/.env" ]]; then
-    echo "[ERROR] Soubor .env nebyl nalezen."
+    echo "[ERROR] Jsou vyžadována oprávnění root."
     exit 1
 fi
 
@@ -21,27 +14,15 @@ source "$PROJECT_DIR/.env"
 trap 'echo "[ERROR] Instalace závislostí selhala na řádku $LINENO." >&2' ERR
 
 echo "========================================"
-echo "         INSTALACE ZÁVISLOSTÍ"
+echo "       INSTALACE ZÁVISLOSTÍ"
 echo "========================================"
 
-echo "[INFO] Distribuce: $OS_NAME"
-echo "[INFO] Architektura: $ARCH"
-echo "[INFO] Správce balíčků: $PACKAGE_MANAGER"
-
 case "$PACKAGE_MANAGER" in
-
     apt)
         export DEBIAN_FRONTEND=noninteractive
 
         PACKAGES=(
             build-essential
-            gcc
-            g++
-            make
-            cmake
-            autoconf
-            automake
-            libtool
             pkg-config
             git
             wget
@@ -49,8 +30,6 @@ case "$PACKAGE_MANAGER" in
             ca-certificates
             tar
             gzip
-            bzip2
-            xz-utils
             patch
             bison
             flex
@@ -62,32 +41,17 @@ case "$PACKAGE_MANAGER" in
             uuid-dev
             libedit-dev
             libcurl4-openssl-dev
-            libspeex-dev
-            libspeexdsp-dev
-            libopus-dev
             libsrtp2-dev
             liblua5.4-dev
-            libnewt-dev
-            liburiparser-dev
-            libiksemel-dev
-            unixodbc-dev
             zlib1g-dev
-            libpopt-dev
-            libogg-dev
-            libvorbis-dev
-            libasound2-dev
-            libspandsp-dev
-            libsndfile1-dev
             python3
+            python3-dev
             perl
             sox
-            ffmpeg
             sngrep
             tcpdump
             tshark
             iproute2
-            iputils-ping
-            dnsutils
         )
 
         echo "[INFO] Aktualizuji seznam balíčků..."
@@ -97,53 +61,36 @@ case "$PACKAGE_MANAGER" in
             -o APT::Update::Error-Mode=any \
             update
 
-        echo "[INFO] Instaluji závislosti..."
+        echo "[INFO] Kontroluji potřebné balíčky..."
 
-        # Neumožníme, aby jediný volitelný nedostupný
-        # balíček zablokoval celou instalaci.
-        AVAILABLE_PACKAGES=()
+        MISSING_PACKAGES=()
 
         for package in "${PACKAGES[@]}"; do
-            if apt-cache show "$package" >/dev/null 2>&1; then
-                AVAILABLE_PACKAGES+=("$package")
+            if [[ "$(dpkg-query -W -f='${Status}' "$package" 2>/dev/null || true)" == "install ok installed" ]]; then
+                echo "[SKIP] $package je již nainstalován."
             else
-                echo "[WARN] Nedostupný balíček: $package"
+                echo "[NEED] $package"
+                MISSING_PACKAGES+=("$package")
             fi
         done
 
-        apt-get \
-            -o DPkg::Lock::Timeout=300 \
-            install -y "${AVAILABLE_PACKAGES[@]}"
+        if (( ${#MISSING_PACKAGES[@]} > 0 )); then
+            echo "[INFO] Instaluji pouze chybějící balíčky..."
+
+            apt-get \
+                -o DPkg::Lock::Timeout=300 \
+                install -y --no-install-recommends \
+                "${MISSING_PACKAGES[@]}"
+        else
+            echo "[OK] Všechny potřebné balíčky jsou již nainstalovány."
+        fi
         ;;
 
     *)
-        echo "[ERROR] Správce $PACKAGE_MANAGER zatím není implementován."
+        echo "[ERROR] Nepodporovaný správce balíčků: $PACKAGE_MANAGER"
         exit 1
         ;;
-
 esac
-
-# Kontrola základních nástrojů
-echo "[INFO] Ověřuji nainstalované nástroje..."
-
-REQUIRED_TOOLS=(
-    gcc
-    g++
-    make
-    git
-    wget
-    curl
-    pkg-config
-)
-
-for tool in "${REQUIRED_TOOLS[@]}"; do
-    if command -v "$tool" >/dev/null 2>&1; then
-        echo "[OK] $tool"
-    else
-        echo "[ERROR] Chybí nástroj: $tool"
-        exit 1
-    fi
-done
 
 echo "========================================"
 echo "[OK] Instalace závislostí dokončena."
