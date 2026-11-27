@@ -255,9 +255,25 @@ tshark \
 
 # Diagnostické výpisy dialplanu
 
-grep -E '\[(CONF|AEL|LUA)\]' \
+grep -E '\[(CONF|AEL|LUA|SYSTEM)\]' \
     "$OUTPUT_DIR/logs/asterisk.log" \
     > "$OUTPUT_DIR/logs/dialplan_events.txt" || true
+
+
+# Kontrola kvality zachycených dat
+
+if [[ ! -s "$OUTPUT_DIR/logs/asterisk.log" ]]; then
+    echo "[WARNING] Asterisk log je prázdný."
+fi
+
+if [[ ! -s "$OUTPUT_DIR/logs/dialplan_events.txt" ]]; then
+    echo "[WARNING] Nebyly zachyceny události dialplanu."
+fi
+
+if [[ ! -s "$OUTPUT_DIR/network/sip.txt" ]]; then
+    echo "[WARNING] Nebyla zachycena SIP signalizace."
+fi
+
 
 # Ruční vyhodnocení testu
 
