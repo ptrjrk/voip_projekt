@@ -219,6 +219,8 @@ read -r
 
 # Ukončení záznamu
 
+sleep 2
+
 stop_capture
 
 echo "[OK] Záznam byl ukončen."
