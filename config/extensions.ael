@@ -35,7 +35,7 @@ context support-ael {
             NoOp([AEL] Queue status: ${QUEUESTATUS});
 
             // End successfully connected call
-            if ("${ABANDONED}" = "FALSE") {
+            if ("${ABANDONED}" = "FALSE" | "${QUEUESTATUS}" = "CONTINUE") {
                 NoOp([AEL] Call finished);
                 Hangup();
             }
