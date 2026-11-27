@@ -62,8 +62,4 @@ context support-ael {
     };
 
     // Hangup handler
-    h => {
-        NoOp([AEL] Channel disconnected);
-    };
-
 };
