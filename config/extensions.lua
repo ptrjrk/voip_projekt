@@ -42,7 +42,8 @@ local function customer_support()
     local mailbox = channel.SUPPORT_MAILBOX:get() or "3000@support"
     local timeout = channel.QUEUE_TIMEOUT:get() or "30"
 
-    app.NoOp("[LUA] Incoming call from " .. caller)
+    local uniqueid = channel.UNIQUEID:get() or "UNKNOWN"
+    app.NoOp("[LUA] Incoming call from " .. caller .. " | ID=" .. uniqueid)
 
     app.Answer()
 
