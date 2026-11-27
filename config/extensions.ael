@@ -16,7 +16,7 @@ context support-ael {
         }
         else {
             // Check real business hours
-            ifTime (08:00-15:59,mon-fri,*,*) {
+            ifTime (08:00-15:59|mon-fri|*|*) {
                 BUSINESS_OPEN = 1;
             }
             else {
